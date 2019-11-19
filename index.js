@@ -1,5 +1,4 @@
 var flatten = require("flatten-vertex-data");
-var warned = false;
 
 module.exports.attr = setAttribute;
 module.exports.index = setIndex;
@@ -42,11 +41,12 @@ function setAttribute(geometry, key, data, itemSize, dtype) {
 
 function updateAttribute(attrib, data, itemSize, dtype) {
   data = data || [];
-  if (!attrib || rebuildAttribute(attrib, data, itemSize)) {
+  const needsNewBuffer = rebuildAttribute(attrib, data, itemSize);
+  if (needsNewBuffer) {
     // create a new array with desired type
     data = flatten(data, dtype);
 
-    if (!attrib) {
+    if (needsNewBuffer) {
       // Build a new attribute
       attrib = new THREE.BufferAttribute(data, itemSize);
     }
@@ -67,6 +67,7 @@ function updateAttribute(attrib, data, itemSize, dtype) {
 // Test whether the attribute needs to be re-created,
 // returns false if we can re-use it as-is.
 function rebuildAttribute(attrib, data, itemSize) {
+  if (!attrib) return true;
   if (attrib.itemSize !== itemSize) return true;
   if (!attrib.array) return true;
   var attribLength = attrib.array.length;
@@ -77,5 +78,4 @@ function rebuildAttribute(attrib, data, itemSize) {
     // [ x, y, z ]
     return attribLength !== data.length;
   }
-  return false;
 }
